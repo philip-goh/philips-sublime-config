@@ -3,7 +3,7 @@
     [
         "AutoFileName",
         "BracketHighlighter",
-        "Csv",
+        "CSV",
         "GitGutter",
         "LSP",
         "LSP-bash",
