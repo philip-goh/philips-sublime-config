@@ -68,7 +68,7 @@ Language intelligence (all via [LSP](https://lsp.sublimetext.io/)):
 | JSON       | LSP-json, Pretty JSON (format/minify/query) | self-managed   |
 | Docker     | LSP-dockerfile, Dockerfile Syntax Highlighting | self-managed |
 | SQL        | SqlBeautifier                           | —                  |
-| TOML       | TOML (Cargo.toml, pyproject.toml syntax) | —                 |
+| TOML       | built into Sublime Text ≥ 4200 (no package; Package Control silently skips packages that shadow shipped ones) | — |
 | CSV        | CSV (column highlighting/editing)       | —                  |
 | Markdown   | MarkdownEditing                         | —                  |
 | requirements.txt | requirementstxt                   | —                  |
