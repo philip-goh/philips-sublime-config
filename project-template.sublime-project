@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "lsp_format_on_save": true,
+        "lsp_code_actions_on_save": {
+            "source.fixAll.ruff": true,
+            "source.organizeImports.ruff": true
+        },
+        "LSP": {
+            "LSP-pyright": {
+                "settings": {
+                    "python.pythonPath": "${folder}/.venv/bin/python",
+                    "python.analysis.typeCheckingMode": "strict"
+                }
+            }
+        }
+    }
+}

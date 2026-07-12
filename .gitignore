@@ -1,0 +1,9 @@
+# Package Control local state — regenerated on every machine.
+Package Control.cache/
+Package Control.last-run
+Package Control.merged-ca-bundle
+Package Control.user-ca-bundle
+oscrypto-ca-bundle.crt
+
+# Never commit license keys.
+*.sublime-license

@@ -1,0 +1,12 @@
+{
+    "index_files": true,
+    "trim_trailing_white_space_on_save": "all",
+    "ensure_newline_at_eof_on_save": true,
+    "translate_tabs_to_spaces": true,
+    "tab_size": 4,
+    "rulers": [100],
+    "save_on_focus_lost": true,
+    "show_definitions": false,
+    "mini_diff": true,
+    "hardware_acceleration": "opengl"
+}

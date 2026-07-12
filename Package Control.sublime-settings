@@ -1,0 +1,21 @@
+{
+    "installed_packages":
+    [
+        "AutoFileName",
+        "BracketHighlighter",
+        "Csv",
+        "GitGutter",
+        "LSP",
+        "LSP-bash",
+        "LSP-clangd",
+        "LSP-json",
+        "LSP-pyright",
+        "LSP-ruff",
+        "LSP-rust-analyzer",
+        "LSP-typescript",
+        "LSP-yaml",
+        "SideBarEnhancements",
+        "SqlBeautifier",
+        "Terminus"
+    ]
+}

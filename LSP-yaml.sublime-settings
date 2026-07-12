@@ -1,0 +1,13 @@
+{
+    "settings": {
+        "yaml.schemas": {
+            "kubernetes": [
+                "k8s/**/*.yaml",
+                "manifests/**/*.yaml"
+            ],
+            "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+        },
+        "yaml.format.enable": true,
+        "yaml.validate": true
+    }
+}

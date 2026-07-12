@@ -1,0 +1,17 @@
+{
+    "show_diagnostics_count_in_view_status": true,
+    "diagnostics_gutter_marker": "sign"
+
+    // Global "lsp_format_on_save" is deliberately NOT enabled: this config is
+    // used across shared codebases, and format-on-save is a per-project
+    // decision. Enable it in a .sublime-project instead (see
+    // project-template.sublime-project), like so:
+    //
+    // "settings": {
+    //     "lsp_format_on_save": true,
+    //     "lsp_code_actions_on_save": {
+    //         "source.fixAll.ruff": true,
+    //         "source.organizeImports.ruff": true
+    //     }
+    // }
+}
