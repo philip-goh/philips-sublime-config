@@ -1,21 +1,30 @@
 {
     "installed_packages":
     [
+        "A File Icon",
         "AutoFileName",
         "BracketHighlighter",
         "CSV",
+        "Dockerfile Syntax Highlighting",
         "GitGutter",
         "LSP",
         "LSP-bash",
         "LSP-clangd",
+        "LSP-dockerfile",
         "LSP-json",
         "LSP-pyright",
         "LSP-ruff",
         "LSP-rust-analyzer",
         "LSP-typescript",
         "LSP-yaml",
+        "MarkdownEditing",
+        "PackageDev",
+        "Pretty JSON",
+        "requirementstxt",
+        "Rust Enhanced",
         "SideBarEnhancements",
         "SqlBeautifier",
-        "Terminus"
+        "Terminus",
+        "TOML"
     ]
 }

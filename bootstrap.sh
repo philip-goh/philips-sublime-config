@@ -4,7 +4,8 @@
 #
 # Installs Sublime Text, Package Control, and the system runtimes the LSP
 # helper packages do NOT manage themselves (clangd, rust-analyzer, python,
-# node), then clones this repo into Sublime's Packages/User directory.
+# node, shellcheck, shfmt), then clones this repo into Sublime's
+# Packages/User directory.
 #
 # Idempotent: safe to run repeatedly. Never deletes an existing User dir —
 # it renames it to a timestamped .bak instead.
@@ -75,7 +76,9 @@ install_linux() {
         nodejs \
         npm \
         git \
-        curl
+        curl \
+        shellcheck \
+        shfmt
 }
 
 install_macos() {
@@ -101,7 +104,7 @@ install_macos() {
     fi
 
     log "Installing system runtimes via Homebrew"
-    brew install python node git
+    brew install python node git shellcheck shfmt
 
     # clangd ships with the Xcode Command Line Tools on macOS.
     if ! xcode-select -p >/dev/null 2>&1; then
