@@ -13,7 +13,7 @@ set -euo pipefail
 
 # Override with SUBLIME_CONFIG_REPO_URL to clone from somewhere else
 # (e.g. a local checkout when testing).
-REPO_URL="${SUBLIME_CONFIG_REPO_URL:-git@github.com:REPLACE_ME/sublime-config.git}"
+REPO_URL="${SUBLIME_CONFIG_REPO_URL:-https://github.com/philip-goh/philips-sublime-config.git}"
 PACKAGE_CONTROL_URL="https://packagecontrol.io/Package%20Control.sublime-package"
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }

@@ -12,17 +12,18 @@ and installs every package. Installed packages themselves are never committed
 | Linux | `~/.config/sublime-text/Packages/User`                        |
 | macOS | `~/Library/Application Support/Sublime Text/Packages/User`    |
 
-> **TODO:** `bootstrap.sh` and the command below use the placeholder
-> `git@github.com:REPLACE_ME/sublime-config.git`. Replace `REPLACE_ME` with
-> the real GitHub owner/repo before using.
-
 ## Bootstrap a clean machine
 
 One-liner (needs only `git` and `curl`):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/REPLACE_ME/sublime-config/main/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/philip-goh/philips-sublime-config/main/bootstrap.sh | bash
 ```
+
+> **Note:** this repo is currently **private**, so the one-liner's raw
+> download 404s without auth and `git clone` will prompt for credentials.
+> On a fresh machine, either make the repo public first, or authenticate
+> (e.g. `gh auth login`, a PAT, or SSH keys) and use the manual steps below.
 
 It installs Sublime Text (apt repo on Linux, Homebrew cask on macOS), Package
 Control, the system runtimes the LSP packages need, Rust via rustup, and then
@@ -33,8 +34,8 @@ already exists, it is renamed to a timestamped `.bak`, never deleted.
 ### Manual steps (if you don't trust piped curl)
 
 ```sh
-git clone git@github.com:REPLACE_ME/sublime-config.git
-cd sublime-config
+git clone https://github.com/philip-goh/philips-sublime-config.git
+cd philips-sublime-config
 less bootstrap.sh   # read it first
 ./bootstrap.sh
 ```
