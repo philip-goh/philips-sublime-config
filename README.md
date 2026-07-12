@@ -20,10 +20,10 @@ One-liner (needs only `git` and `curl`):
 curl -fsSL https://raw.githubusercontent.com/philip-goh/philips-sublime-config/main/bootstrap.sh | bash
 ```
 
-> **Note:** this repo is currently **private**, so the one-liner's raw
-> download 404s without auth and `git clone` will prompt for credentials.
-> On a fresh machine, either make the repo public first, or authenticate
-> (e.g. `gh auth login`, a PAT, or SSH keys) and use the manual steps below.
+> **Note:** the one-liner relies on this repo being **public**. If it is
+> ever made private again, the raw download 404s without auth and
+> `git clone` prompts for credentials — authenticate first (e.g.
+> `gh auth login`, a PAT, or SSH keys) and use the manual steps below.
 
 It installs Sublime Text (apt repo on Linux, Homebrew cask on macOS), Package
 Control, the system runtimes the LSP packages need, Rust via rustup, and then
