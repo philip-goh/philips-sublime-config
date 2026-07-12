@@ -7,3 +7,7 @@ oscrypto-ca-bundle.crt
 
 # Never commit license keys.
 *.sublime-license
+
+# Terminus regenerates these at runtime.
+Terminus/
+Terminus.hidden-color-scheme

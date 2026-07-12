@@ -8,5 +8,6 @@
     "save_on_focus_lost": true,
     "show_definitions": false,
     "mini_diff": true,
-    "hardware_acceleration": "opengl"
+    "hardware_acceleration": "opengl",
+    "ignored_packages": ["Vintage"]
 }

@@ -71,6 +71,24 @@ submodules.
 Removing works the same way in reverse: `Package Control: Remove Package`,
 then commit the shrunken manifest.
 
+### Runtime drift is normal
+
+Sublime and Package Control write to files in this directory while running:
+Package Control reformats its settings file (trailing commas, an
+`in_process_packages` key, resorted entries), and generated files like
+Terminus color schemes appear (gitignored). This means `git pull` inside
+`Packages/User` can refuse to merge. When that happens, discard the runtime
+noise and pull again — with Sublime closed, ideally:
+
+```sh
+cd <Packages/User>
+git checkout -- "Package Control.sublime-settings"
+git pull --ff-only
+```
+
+Only commit manifest changes you made deliberately (installing/removing a
+package); `git diff` before committing.
+
 ## LSP servers: self-managed vs. system
 
 Most `LSP-*` helper packages download and update their own language server —
