@@ -9,5 +9,21 @@
     "show_definitions": false,
     "mini_diff": true,
     "hardware_acceleration": "opengl",
-    "ignored_packages": ["Vintage"]
+    "ignored_packages": ["Vintage"],
+
+    // Keep dependency/build dirs out of Goto Anything, Find in Files, and
+    // the symbol index (LSP handles code navigation inside them anyway).
+    // Setting this REPLACES the default list, so the stock binary
+    // extensions are repeated here.
+    "binary_file_patterns": [
+        // Sublime's defaults:
+        "*.jpg", "*.jpeg", "*.png", "*.gif", "*.ttf", "*.tga", "*.dds",
+        "*.ico", "*.eot", "*.pdf", "*.swf", "*.jar", "*.zip",
+        // Dependency and build output directories:
+        "node_modules/",
+        ".venv/", "venv/",
+        "__pycache__/",
+        ".mypy_cache/", ".ruff_cache/", ".pytest_cache/",
+        "target/"    // cargo build output
+    ]
 }
