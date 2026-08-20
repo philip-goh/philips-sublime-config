@@ -78,6 +78,25 @@ SideBarEnhancements, A File Icon, Terminus (terminal in the editor), and
 PackageDev (syntax + completions for editing the `.sublime-settings` files
 in this very repo).
 
+## Key bindings
+
+The LSP package ships its commands **unbound**, so the keymaps in this repo
+bind the essentials. Every LSP binding is capability-gated: it only fires
+when the current file has a language server that supports the feature, and
+falls back to Sublime's built-in behavior otherwise.
+
+| Key (Linux / macOS)                 | Action                       |
+|-------------------------------------|------------------------------|
+| `F12`                               | Goto definition (LSP)        |
+| `Shift+F12`                         | Find references              |
+| `F2`                                | Rename symbol                |
+| `Ctrl+.` / `Cmd+.`                  | Code actions                 |
+| `Ctrl+Alt+F` / `Cmd+Opt+F`          | Format document              |
+| `Ctrl+K Ctrl+I` / `Cmd+K Cmd+I`     | Hover docs at caret          |
+| `Alt+`` `                           | Toggle Terminus terminal     |
+
+(`Ctrl+`` ` is left alone — that's Sublime's own console.)
+
 ## How the package manifest sync works
 
 [`Package Control.sublime-settings`](Package%20Control.sublime-settings)
@@ -131,6 +150,21 @@ Two come from the **system** and are installed by `bootstrap.sh`:
   Line Tools on macOS.
 - **rust-analyzer** (for LSP-rust-analyzer) — installed as a rustup component
   so it always matches the active toolchain.
+
+## CI
+
+Every push runs [a small workflow](.github/workflows/ci.yml) that parses all
+`*.sublime-settings` / `*.sublime-keymap` / `*.sublime-project` files
+(Sublime's JSON-with-comments dialect) and shellchecks `bootstrap.sh` — a
+typo in a settings file otherwise fails silently inside Sublime. Run it
+locally with:
+
+```sh
+python3 scripts/check_settings.py
+```
+
+(The script lives in `scripts/` because Sublime loads any *top-level* `.py`
+in `Packages/User` as an editor plugin; subdirectories are ignored.)
 
 ## Per-project overrides
 
