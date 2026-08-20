@@ -11,3 +11,6 @@ oscrypto-ca-bundle.crt
 # Terminus regenerates these at runtime.
 Terminus/
 Terminus.hidden-color-scheme
+
+# local-ai writes timestamped backups before merging settings.
+*.bak

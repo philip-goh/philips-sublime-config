@@ -1,6 +1,5 @@
 {
-    "installed_packages":
-    [
+    "installed_packages": [
         "A File Icon",
         "AutoFileName",
         "BracketHighlighter",
@@ -18,6 +17,7 @@
         "LSP-typescript",
         "LSP-yaml",
         "MarkdownEditing",
+        "OpenAI completion",
         "PackageDev",
         "Pretty JSON",
         "requirementstxt",
