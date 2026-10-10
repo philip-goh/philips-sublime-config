@@ -10,6 +10,7 @@
     "mini_diff": true,
     "hardware_acceleration": "opengl",
     "ignored_packages": ["Vintage"],
+    "file_icon_theme": "A File Icon (Mono).sublime-file-icons",
 
     // Keep dependency/build dirs out of Goto Anything, Find in Files, and
     // the symbol index (LSP handles code navigation inside them anyway).
