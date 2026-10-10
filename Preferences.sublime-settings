@@ -26,9 +26,15 @@
         ".mypy_cache/", ".ruff_cache/", ".pytest_cache/",
         ".ipynb_checkpoints/",
         "target/",    // cargo build output
+        // Game engine caches and build output:
+        "Library/", "UserSettings/", "Logs/",   // Unity
+        "Binaries/", "Intermediate/", "Saved/", "DerivedDataCache/",   // Unreal
+        ".godot/", ".import/",                  // Godot
         // Data / analysis artifacts (keep binaries out of search and indexing):
         "*.parquet", "*.feather", "*.arrow", "*.orc",
         "*.h5", "*.hdf5", "*.pkl", "*.npy", "*.npz",
-        "*.sqlite", "*.duckdb", "*.gz", "*.zst"
+        "*.sqlite", "*.duckdb", "*.gz", "*.zst",
+        // Game assets (binary):
+        "*.uasset", "*.umap", "*.uexp", "*.pak", "*.unitypackage"
     ]
 }

@@ -1,0 +1,11 @@
+%YAML 1.2
+---
+# Godot 4's shading language (.gdshader) is GLSL-like. As with Unreal
+# shaders, no maintained package claims it, so this wrapper inherits the
+# shipped C++ syntax for the baseline highlighting. (Godot Tools, installed
+# by bootstrap.sh, covers GDScript, .tscn, and project.godot.)
+name: Godot Shader
+file_extensions: [gdshader]
+scope: source.gdshader
+version: 2
+extends: Packages/C++/C++.sublime-syntax

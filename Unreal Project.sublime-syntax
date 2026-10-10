@@ -1,0 +1,9 @@
+%YAML 1.2
+---
+# .uproject files are JSON, but Sublime only auto-detects known extensions,
+# so this wrapper claims it and inherits the shipped JSON syntax.
+name: Unreal Project
+file_extensions: [uproject]
+scope: source.json.unreal
+version: 2
+extends: Packages/JSON/JSON.sublime-syntax

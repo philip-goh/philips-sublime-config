@@ -1,0 +1,12 @@
+%YAML 1.2
+---
+# Unreal's .usf/.ush shader files are HLSL. There is no maintained HLSL
+# syntax package for Sublime Text, so this wrapper inherits the shipped C++
+# syntax, which brings comments, strings, numbers, and preprocessor
+# directives — the useful baseline for shader authoring. Delete this file if
+# a maintained HLSL/shaders package appears.
+name: Unreal Shader
+file_extensions: [usf, ush]
+scope: source.hlsl.unreal
+version: 2
+extends: Packages/C++/C++.sublime-syntax

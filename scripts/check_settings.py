@@ -13,11 +13,17 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    import yaml
+except ImportError:  # PyYAML is only needed to validate .sublime-syntax files
+    yaml = None
+
 GLOBS = (
     "*.sublime-settings",
     "*.sublime-keymap",
     "*.sublime-project",
     "*.sublime-build",
+    "*.sublime-syntax",
 )
 
 
@@ -67,7 +73,13 @@ def main() -> int:
     failed = False
     for f in files:
         try:
-            json.loads(strip_jsonc(f.read_text(encoding="utf-8")))
+            if f.suffix == ".sublime-syntax":
+                if yaml is None:
+                    print(f"SKIP {f.name}: PyYAML not installed")
+                    continue
+                yaml.safe_load(f.read_text(encoding="utf-8"))
+            else:
+                json.loads(strip_jsonc(f.read_text(encoding="utf-8")))
             print(f"OK   {f.name}")
         except Exception as e:  # noqa: BLE001
             print(f"FAIL {f.name}: {e}")

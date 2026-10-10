@@ -4,9 +4,10 @@
 #
 # Installs Sublime Text, Package Control, and the system runtimes the LSP
 # helper packages do NOT manage themselves (clangd, rust-analyzer, python,
-# node, shellcheck, shfmt), plus SQLFluff via pipx for the SQL build system.
-# Then clones this repo into Sublime's Packages/User directory and prunes
-# packages this repo has dropped.
+# node, shellcheck, shfmt), plus SQLFluff via pipx and the .NET SDK for
+# OmniSharp (Unity/Godot C#). Then clones this repo into Sublime's
+# Packages/User directory, installs the git-only packages listed in
+# scripts/check_packages.py, and prunes packages this repo has dropped.
 #
 # Idempotent: safe to run repeatedly. Present components are left alone,
 # missing ones are installed, outdated ones are upgraded, and Package
@@ -169,6 +170,20 @@ else
     pipx install sqlfluff
 fi
 
+# --- .NET SDK (Unity / Godot C# via LSP-OmniSharp) ---------------------------
+# LSP-OmniSharp downloads OmniSharp itself, but OmniSharp is a .NET app and
+# needs a runtime on the machine. Install the current LTS with Microsoft's
+# official user-local installer into ~/.dotnet (no sudo, no extra apt repos).
+# LSP.sublime-settings puts ~/.dotnet on the OmniSharp process's PATH, since
+# a GUI-launched Sublime does not see the shell's PATH.
+
+if command -v dotnet >/dev/null 2>&1 || [ -x "$HOME/.dotnet/dotnet" ]; then
+    log ".NET SDK already installed"
+else
+    log "Installing .NET SDK (LTS) into ~/.dotnet"
+    curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel LTS
+fi
+
 # --- Package Control ---------------------------------------------------------
 
 PC_PACKAGE="$INSTALLED_PACKAGES_DIR/Package Control.sublime-package"
@@ -224,6 +239,38 @@ else
     log "Cloning $REPO_URL into Packages/User"
     mkdir -p "$SUBLIME_DIR/Packages"
     git clone "$REPO_URL" "$USER_DIR"
+fi
+
+# --- Git-installed Sublime packages (not on Package Control) -----------------
+# The canonical list lives in scripts/check_packages.py so the weekly audit
+# reads the same source. Re-runs pull updates; nothing is removed here.
+
+install_git_package() {
+    local name=$1 url=$2 dir="$SUBLIME_DIR/Packages/$1"
+    if [ -d "$dir/.git" ]; then
+        log "Updating $name"
+        if ! git -C "$dir" pull --ff-only; then
+            err "Could not update $name; keeping the existing checkout"
+        fi
+    elif [ -e "$dir" ]; then
+        log "$name exists but is not a git checkout; leaving it alone"
+    else
+        log "Installing $name from $url"
+        if ! git clone "$url" "$dir"; then
+            err "Could not install $name; skipping"
+        fi
+    fi
+}
+
+if command -v python3 >/dev/null 2>&1; then
+    mkdir -p "$SUBLIME_DIR/Packages"
+    while IFS=$'\t' read -r name url; do
+        if [ -n "$name" ]; then
+            install_git_package "$name" "$url"
+        fi
+    done < <(python3 "$USER_DIR/scripts/check_packages.py" --list-git-packages)
+else
+    err "python3 not found; skipping the git-installed packages"
 fi
 
 # --- Prune packages this repo has dropped ------------------------------------

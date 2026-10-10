@@ -30,9 +30,11 @@ curl -fsSL https://raw.githubusercontent.com/philip-goh/philips-sublime-config/m
 
 It installs Sublime Text (apt repo on Linux, Homebrew cask on macOS), Package
 Control, the system runtimes the LSP packages need, Rust via rustup, SQLFluff
-via pipx, and then clones this repo into `Packages/User`. It also prunes
-packages this repo has dropped (see "Packages removed" below), because
-Package Control installs additions but never removes anything on its own.
+via pipx, the .NET SDK for Unity/Godot C# (Microsoft's user-local installer),
+then clones this repo into `Packages/User` and git-clones the packages that
+live outside Package Control (Godot Tools). It also prunes packages this repo
+has dropped (see "Packages removed" below), because Package Control installs
+additions but never removes anything on its own.
 
 It is idempotent — re-running it pulls the latest config instead of
 re-installing, and upgrades SQLFluff if pipx has it installed. If Package
@@ -61,10 +63,12 @@ Or do what the script does by hand:
    `rustup component add rust-analyzer`.
 4. `pipx install sqlfluff` (SQL linting/formatting; pipx avoids PEP 668
    "externally managed environment" errors).
-5. Download [Package Control](https://packagecontrol.io/Package%20Control.sublime-package)
+5. Install the .NET SDK into `~/.dotnet` for LSP-OmniSharp (Unity/Godot C#):
+   `curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel LTS`.
+6. Download [Package Control](https://packagecontrol.io/Package%20Control.sublime-package)
    into Sublime's `Installed Packages/` directory.
-6. Back up any existing `Packages/User`, then clone this repo in its place.
-7. Launch Sublime Text.
+7. Back up any existing `Packages/User`, then clone this repo in its place.
+8. Launch Sublime Text.
 
 ## What's in the box
 
@@ -85,6 +89,7 @@ Language intelligence and tooling:
 | Jupyter    | Helium (run cells, inspect DataFrames in-editor)   | your Python `ipykernel`|
 | TOML       | built into Sublime Text ≥ 4200                     | —                      |
 | Markdown   | MarkdownEditing                                    | —                      |
+| Games      | Unreal, Godot, and Unity — see [Game development](#game-development) | mixed |
 
 Editor quality of life: BracketHighlighter, GitGutter, FileSystem
 Autocompletion (path completion, replacing the abandoned AutoFileName),
@@ -132,6 +137,77 @@ dialect = postgres
 (`sqlfluff dialects` lists ~30 options; the build system's first run without
 a config prints the list.)
 
+## Game development
+
+The engines themselves are installed outside this repo (Unity Hub, the Epic
+Games Launcher or a UE source build, [godotengine.org](https://godotengine.org)
+or `brew install --cask godot`). On the Sublime side this config covers their
+code, shader, config, and project files:
+
+| Engine | Files                                       | Syntax highlighting                        | Tooling |
+|--------|---------------------------------------------|--------------------------------------------|---------|
+| Unreal | C++ `.h`/`.cpp`/`.inl`                      | built into Sublime                        | LSP-clangd against a UBT-generated `compile_commands.json` |
+|        | shaders `.usf`/`.ush`                       | `Unreal Shader` (repo wrapper)             | —       |
+|        | configs `.ini`                              | INI package                               | —       |
+|        | project `.uproject`                         | `Unreal Project` (repo wrapper)            | —       |
+| Godot  | GDScript `.gd`, scenes `.tscn`, `project.godot` | Godot Tools (git-installed, MIT)        | run/open commands + Godot's built-in LSP |
+|        | shaders `.gdshader`                         | `Godot Shader` (repo wrapper)              | —       |
+|        | C#                                          | built into Sublime                        | LSP-OmniSharp |
+| Unity  | C#                                          | built into Sublime                        | LSP-OmniSharp against the generated `.sln` |
+|        | shaders/compute `.shader`/`.cginc`/`.hlsl`  | Unity Shader package                      | completions, format, goto-definition from that package |
+
+### Unreal Engine
+
+Unreal's C++ support is the strongest part: `LSP-clangd` (already configured)
+gives completions, diagnostics, and go-to-definition once clangd has a
+compilation database. Generate one from your project root with UnrealBuildTool's
+`GenerateClangDatabase` mode:
+
+```sh
+# macOS (installed engine), from the project root. On Linux use
+# Engine/Build/BatchFiles/Linux/Build.sh with platform "Linux".
+"$UE_ROOT/Engine/Build/BatchFiles/Mac/Build.sh" -Mode=GenerateClangDatabase \
+    MyGameEditor Mac Development -Project="$PWD/MyGame.uproject"
+```
+
+clangd picks up the resulting `compile_commands.json` from the project root
+(regenerate after adding source files; UBT re-creates the whole file each
+time). If clangd chokes on a UE-specific flag, a `.clangd` file in the project
+root can strip it with `CompileFlags: { Remove: [...] }`.
+
+### Godot
+
+[Godot Tools](https://github.com/pbedn/godot-tools) is not on Package Control,
+so `bootstrap.sh` git-clones it into `Packages/GodotTools` and pulls updates
+on re-run. It adds syntax for `.gd`, `.tscn`, and `.godot` files plus commands:
+
+- `Godot: Open Project`, `Godot: Run Project`, `Godot: Run Current Scene`
+  (set `godot_executable` in its settings if auto-detection misses your
+  binary — e.g. the Homebrew cask app).
+- `Godot: Setup LSP For Current Project` starts the editor with Godot's
+  built-in language server on TCP 6005. The `godot-lsp` client in
+  [`LSP.sublime-settings`](LSP.sublime-settings) is already enabled, so
+  GDScript gets completions, hover, and diagnostics as soon as that server is
+  up (set `"enabled": false` there if you edit `.gd` files without Godot
+  running).
+
+### Unity
+
+Open the project root — the folder with `Assets/` and the `.sln` Unity
+generates — so OmniSharp can load the solution. The Unity Shader package
+adds `.shader`/`.cginc`/`.hlsl` highlighting, completions, formatting, and
+goto-definition for built-in shader symbols. `.asmdef` files are highlighted
+as JSON by a repo wrapper.
+
+### Repo-maintained syntax wrappers
+
+`Unreal Shader`, `Godot Shader`, `Unreal Project`, and
+`Unity Assembly Definition` are tiny `.sublime-syntax` files at this repo's
+root. They exist because no maintained package claims those formats, and they
+only `extends` the shipped C++/JSON syntaxes — there are no regexes of our
+own to maintain, and CI parses them. Delete a wrapper if a maintained package
+for that format ever appears (the audit is the reminder to look).
+
 ## Keeping this config up to speed
 
 Three layers, so nothing silently rots:
@@ -150,7 +226,9 @@ Three layers, so nothing silently rots:
 
    `WARN` means older than two years (revisit eventually); `STALE` (three
    years) or `MISSING` (typo, or delisted from Package Control) makes the
-   script exit non-zero. The
+   script exit non-zero. The same run checks the GitHub repositories of the
+   git-installed packages (Godot Tools): an archived upstream or no push for
+   three years also fails. The
    [`package-audit` workflow](.github/workflows/package-audit.yml) runs it
    weekly and on demand, and a failed scheduled run notifies via GitHub, so
    an abandoned dependency surfaces even if you never look.
@@ -240,8 +318,15 @@ you install nothing:
   your project so it uses your config and plugins. LSP-bash picks up the
   system `shellcheck` and `shfmt` (installed by `bootstrap.sh`) for linting
   and formatting.
+- **LSP-OmniSharp** downloads OmniSharp itself but needs a .NET runtime on
+  the machine — `bootstrap.sh` installs the SDK into `~/.dotnet`, and the
+  client config in `LSP.sublime-settings` puts that directory on the
+  server's `PATH` (GUI-launched Sublime does not see a login shell's PATH).
 - **SQLFluff** is not an LSP package: it is an external, actively maintained
   tool installed with `pipx` and driven by `SQLFluff.sublime-build`.
+- **Godot's language server** is not a package either: the Godot editor
+  serves it on TCP 6005, the git-installed Godot Tools package starts it,
+  and the `godot-lsp` client in `LSP.sublime-settings` connects to it.
 
 Two come from the **system** and are installed by `bootstrap.sh`:
 
@@ -254,8 +339,9 @@ Two come from the **system** and are installed by `bootstrap.sh`:
 
 Every push runs [a workflow](.github/workflows/ci.yml) that parses all
 `*.sublime-settings` / `*.sublime-keymap` / `*.sublime-project` /
-`*.sublime-build` files (Sublime's JSON-with-comments dialect), byte-compiles
-the check scripts, and shellchecks `bootstrap.sh` — a typo in a settings file
+`*.sublime-build` files (Sublime's JSON-with-comments dialect) and — with
+PyYAML installed in CI — the `.sublime-syntax` wrappers, byte-compiles the
+check scripts, and shellchecks `bootstrap.sh` — a typo in a settings file
 otherwise fails silently inside Sublime. Run it locally with:
 
 ```sh
@@ -290,6 +376,6 @@ actively maintained tools:
 | SqlBeautifier          | 2014         | SQLFluff build system                |
 | requirementstxt        | 2016         | — no maintained alternative; `requirements.txt` opens as plain text |
 
-Three remaining packages move slowly but are still maintained; the audit
-prints a `WARN` for them, which is the reminder to revisit: Dockerfile Syntax
-Highlighting, Helium, and Pretty JSON.
+A handful of remaining packages move slowly but are still maintained; the
+audit prints a `WARN` for them, which is the reminder to revisit: Dockerfile
+Syntax Highlighting, Helium, INI, Pretty JSON, and Unity Shader.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit `Package Control.sublime-settings` against Package Control's channel.
+"""Audit the package manifest and git-installed packages for staleness.
 
 The manifest makes Package Control install any missing package automatically,
 but nothing tells you when a package stops being maintained. This script
@@ -11,14 +11,21 @@ package in the manifest and flags:
     STALE    older than MAX_AGE_DAYS — exit 1
     MISSING  not in any channel repository — exit 1
 
+It also checks the GitHub repositories of the packages bootstrap.sh installs
+with `git clone` (they are not on Package Control): archived upstream or no
+push for MAX_AGE_DAYS also exits 1.
+
 Run locally with `python3 scripts/check_packages.py`; the weekly
-`package-audit` GitHub workflow runs the same check.
+`package-audit` GitHub workflow runs the same check. bootstrap.sh uses
+`--list-git-packages` to install those same packages, so this script is the
+single source of truth for the list.
 """
 
 import argparse
 import datetime as dt
 import json
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -29,6 +36,18 @@ MANIFEST_NAME = "Package Control.sublime-settings"
 WARN_AGE_DAYS = 730
 MAX_AGE_DAYS = 1095
 RELEASE_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+GITHUB_DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+# Packages that are not on Package Control and are installed by bootstrap.sh
+# with `git clone`. `checkout_dir` is the directory name under Packages/.
+GIT_PACKAGES = [
+    {
+        "name": "Godot Tools",
+        "checkout_dir": "GodotTools",
+        "clone_url": "https://github.com/pbedn/godot-tools.git",
+        "api_url": "https://api.github.com/repos/pbedn/godot-tools",
+    },
+]
 
 
 def load_channel(channel_file: Path | None) -> dict:
@@ -39,6 +58,23 @@ def load_channel(channel_file: Path | None) -> dict:
     )
     with urllib.request.urlopen(request, timeout=120) as response:
         return json.load(response)
+
+
+def github_last_push(api_url: str) -> tuple[bool, dt.datetime]:
+    """Return (archived, last push date) for a GitHub repository."""
+    request = urllib.request.Request(
+        api_url,
+        headers={
+            "User-Agent": "philips-sublime-config/check_packages",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        data = json.load(response)
+    pushed = dt.datetime.strptime(data["pushed_at"], GITHUB_DATE_FORMAT).replace(
+        tzinfo=dt.timezone.utc
+    )
+    return bool(data.get("archived", False)), pushed
 
 
 def newest_release_dates(channel: dict) -> dict[str, dt.datetime]:
@@ -95,6 +131,37 @@ def audit(root: Path, channel: dict) -> list[str]:
             status = "OK"
         print(f"{status:<8} {name:<34} {released.date().isoformat():<14} {age_days:>5}d")
 
+    if GIT_PACKAGES:
+        print("\nGit-installed packages (not on Package Control):\n")
+        print(f"{'STATUS':<8} {'PACKAGE':<34} {'LAST PUSH':<14} {'AGE':>6}")
+        for entry in GIT_PACKAGES:
+            try:
+                archived, pushed = github_last_push(entry["api_url"])
+            except (urllib.error.URLError, KeyError, ValueError) as exc:
+                print(
+                    f"{'WARN':<8} {entry['name']:<34} {'n/a':<14} {'n/a':>6}"
+                    f"  (GitHub lookup failed: {exc})"
+                )
+                continue
+            age_days = (now - pushed).days
+            if archived:
+                status = "STALE"
+                failures.append(
+                    f"{entry['name']}: upstream repository is archived "
+                    f"({entry['api_url']})"
+                )
+            elif age_days > MAX_AGE_DAYS:
+                status = "STALE"
+                failures.append(
+                    f"{entry['name']}: no upstream push in {age_days} days "
+                    f"({pushed.date().isoformat()})"
+                )
+            elif age_days > WARN_AGE_DAYS:
+                status = "WARN"
+            else:
+                status = "OK"
+            print(f"{status:<8} {entry['name']:<34} {pushed.date().isoformat():<14} {age_days:>5}d")
+
     print()
     if not failures:
         print(
@@ -119,7 +186,17 @@ def main() -> int:
         type=Path,
         help="use a local channel_v3.json instead of downloading it",
     )
+    parser.add_argument(
+        "--list-git-packages",
+        action="store_true",
+        help="print '<checkout_dir>\\t<clone_url>' for each git-installed package",
+    )
     args = parser.parse_args()
+
+    if args.list_git_packages:
+        for entry in GIT_PACKAGES:
+            print(f"{entry['checkout_dir']}\t{entry['clone_url']}")
+        return 0
 
     root = Path(__file__).resolve().parent.parent
     failures = audit(root, load_channel(args.channel_file))

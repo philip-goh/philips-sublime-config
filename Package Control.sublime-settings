@@ -6,12 +6,14 @@
         "FileSystem Autocompletion",
         "GitGutter",
         "Helium",
+        "INI",
         "LSP",
         "LSP-bash",
         "LSP-clangd",
         "LSP-dockerfile",
         "LSP-eslint",
         "LSP-json",
+        "LSP-OmniSharp",
         "LSP-pyright",
         "LSP-ruff",
         "LSP-rust-analyzer",
@@ -24,6 +26,7 @@
         "rainbow_csv",
         "Rust Enhanced",
         "SideBarEnhancements",
-        "Terminus"
+        "Terminus",
+        "Unity Shader"
     ]
 }

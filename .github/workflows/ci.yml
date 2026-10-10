@@ -10,8 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate Sublime JSON files
-        run: python3 scripts/check_settings.py
+      - name: Validate Sublime settings/keymaps/builds/syntaxes
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 scripts/check_settings.py
 
       - name: Byte-compile check scripts
         run: python3 -m py_compile scripts/*.py

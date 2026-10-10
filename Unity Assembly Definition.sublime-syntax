@@ -1,0 +1,9 @@
+%YAML 1.2
+---
+# Unity's .asmdef/.asmref assembly files are JSON; inherit the shipped JSON
+# syntax so they are highlighted automatically.
+name: Unity Assembly Definition
+file_extensions: [asmdef, asmref]
+scope: source.json.unityassembly
+version: 2
+extends: Packages/JSON/JSON.sublime-syntax
