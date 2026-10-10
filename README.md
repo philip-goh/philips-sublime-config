@@ -84,7 +84,7 @@ Language intelligence and tooling:
 | YAML/k8s   | LSP-yaml (kubernetes + GitHub Actions schemas)     | self-managed           |
 | JSON       | LSP-json, Pretty JSON (format/minify/query)        | self-managed           |
 | Docker     | LSP-dockerfile, Dockerfile Syntax Highlighting     | self-managed           |
-| SQL        | built-in SQL syntax + SQLFluff build system        | pipx (`sqlfluff`)      |
+| SQL        | built-in SQL syntax + SQLFluff build system        | pipx or Homebrew (`sqlfluff`) |
 | CSV/data   | rainbow_csv (column highlighting, RBQL queries)    | —                      |
 | Jupyter    | Helium (run cells, inspect DataFrames in-editor)   | your Python `ipykernel`|
 | TOML       | built into Sublime Text ≥ 4200                     | —                      |
@@ -324,7 +324,8 @@ you install nothing:
   client config in `LSP.sublime-settings` puts that directory on the
   server's `PATH` (GUI-launched Sublime does not see a login shell's PATH).
 - **SQLFluff** is not an LSP package: it is an external, actively maintained
-  tool installed with `pipx` and driven by `SQLFluff.sublime-build`.
+  tool installed with `pipx` or Homebrew and driven by
+  `SQLFluff.sublime-build`.
 - **Godot's language server** is not a package either: the Godot editor
   serves it on TCP 6005, the git-installed Godot Tools package starts it,
   and the `godot-lsp` client in `LSP.sublime-settings` connects to it.
