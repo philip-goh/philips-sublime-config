@@ -37,10 +37,10 @@ has dropped (see "Packages removed" below), because Package Control installs
 additions but never removes anything on its own.
 
 It is idempotent — re-running it pulls the latest config instead of
-re-installing, and upgrades SQLFluff if pipx has it installed. If Package
-Control left its settings file dirty while Sublime was running, the script
-saves that runtime state to a timestamped `.bak` and retries the pull once
-(see "Runtime drift is normal"). If a `Packages/User` directory already
+re-installing, and upgrades SQLFluff if pipx has it installed. If Sublime
+left tracked settings files dirty while it was running, the script backs up
+exactly the files the incoming commits would overwrite and retries the pull
+once (see "Runtime drift is normal"). If a `Packages/User` directory already
 exists, it is renamed to a timestamped `.bak`, never deleted.
 
 ### Manual steps (if you don't trust piped curl)
@@ -303,9 +303,10 @@ git pull --ff-only
 ```
 
 Only commit manifest changes you made deliberately (installing/removing a
-package); `git diff` before committing. Re-running `bootstrap.sh` handles the
-manifest case automatically: it backs up the runtime version, restores the
-committed one, and retries the pull.
+package); `git diff` before committing. Re-running `bootstrap.sh` handles
+this automatically: for the files the incoming commits would overwrite, it
+backs up the runtime versions to timestamped `.bak` files, restores the
+committed ones, and retries the pull.
 
 ## LSP servers: self-managed vs. system
 

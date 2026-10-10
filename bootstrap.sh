@@ -197,29 +197,41 @@ fi
 
 # --- This repo as Packages/User ----------------------------------------------
 
-# Package Control rewrites its settings file while Sublime runs, which makes
-# `git pull --ff-only` refuse to fast-forward when the incoming commits touch
-# that file. When that is the only obstacle, save the runtime state aside and
-# retry once; everything else is left untouched for the user to resolve (see
-# README "Runtime drift is normal"). A clean up-to-date checkout pulls with
-# no changes at all.
+# Package Control and Sublime rewrite tracked settings files (the manifest,
+# and Preferences) while the editor runs, which makes `git pull --ff-only`
+# refuse to fast-forward when incoming commits touch the same files. When
+# that happens, back up the locally-modified copies of exactly the files the
+# pull would overwrite, restore their committed versions, and retry once.
+# Uncommitted changes to files the pull does not touch are left alone, and a
+# clean, current checkout pulls with no changes at all.
 sync_user_dir() {
-    local manifest="Package Control.sublime-settings"
-    local dirty=0
-    git -C "$USER_DIR" diff --quiet -- "$manifest" || dirty=1
-    git -C "$USER_DIR" diff --cached --quiet -- "$manifest" || dirty=1
+    local upstream
+    upstream="$(git -C "$USER_DIR" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" || return 1
+    git -C "$USER_DIR" fetch --quiet || return 1
 
-    if ! git -C "$USER_DIR" pull --ff-only; then
-        if [ "$dirty" -eq 0 ]; then
-            return 1
-        fi
-        local backup
-        backup="$USER_DIR/${manifest}.$(date +%Y%m%d-%H%M%S).bak"
-        log "Backing up runtime-modified manifest to $(basename "$backup")"
-        cp "$USER_DIR/$manifest" "$backup"
-        git -C "$USER_DIR" checkout HEAD -- "$manifest"
+    local modified incoming blocking
+    modified="$({
+        git -C "$USER_DIR" diff --name-only
+        git -C "$USER_DIR" diff --cached --name-only
+    } | sort -u)"
+    incoming="$(git -C "$USER_DIR" diff --name-only "HEAD...$upstream" | sort -u)"
+    blocking="$(comm -12 <(printf '%s\n' "$modified") <(printf '%s\n' "$incoming"))"
+
+    if [ -z "$blocking" ]; then
         git -C "$USER_DIR" pull --ff-only
+        return
     fi
+
+    local stamp
+    stamp="$(date +%Y%m%d-%H%M%S)"
+    local file
+    while IFS= read -r file; do
+        [ -n "$file" ] || continue
+        log "Backing up runtime-modified $(basename "$file") to $(basename "$file").$stamp.bak"
+        cp "$USER_DIR/$file" "$USER_DIR/$file.$stamp.bak"
+        git -C "$USER_DIR" checkout HEAD -- "$file"
+    done <<< "$blocking"
+    git -C "$USER_DIR" pull --ff-only
 }
 
 if [ -d "$USER_DIR/.git" ]; then
