@@ -234,6 +234,25 @@ sync_user_dir() {
     git -C "$USER_DIR" pull --ff-only
 }
 
+# --- Relocate old in-Packages backups ----------------------------------------
+# Sublime loads every directory in Packages/ as a package, and older
+# bootstraps parked backed-up User dirs there as User.<timestamp>.bak. A
+# stale copy can ship its own Package Control.sublime-settings, which
+# Package Control merges as "predefined packages" and then strips those
+# names from the manifest — silent, confusing drift. Move such backups next
+# to Packages/ so the editor stops loading them.
+
+for backup in "$SUBLIME_DIR"/Packages/User.*.bak; do
+    [ -d "$backup" ] || continue
+    target="$SUBLIME_DIR/$(basename "$backup")"
+    if [ -e "$target" ]; then
+        log "Leaving $(basename "$backup") in Packages/; $target already exists"
+    else
+        log "Moving $(basename "$backup") out of Packages/ (Sublime loads it as a package)"
+        mv "$backup" "$target"
+    fi
+done
+
 if [ -d "$USER_DIR/.git" ]; then
     log "Packages/User is already a git checkout; syncing latest"
     if ! sync_user_dir; then
@@ -244,7 +263,7 @@ if [ -d "$USER_DIR/.git" ]; then
     fi
 else
     if [ -e "$USER_DIR" ]; then
-        BACKUP="$USER_DIR.$(date +%Y%m%d-%H%M%S).bak"
+        BACKUP="$SUBLIME_DIR/User.$(date +%Y%m%d-%H%M%S).bak"
         log "Backing up existing Packages/User to $BACKUP"
         mv "$USER_DIR" "$BACKUP"
     fi

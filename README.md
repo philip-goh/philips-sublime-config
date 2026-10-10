@@ -41,7 +41,9 @@ re-installing, and upgrades SQLFluff if pipx has it installed. If Sublime
 left tracked settings files dirty while it was running, the script backs up
 exactly the files the incoming commits would overwrite and retries the pull
 once (see "Runtime drift is normal"). If a `Packages/User` directory already
-exists, it is renamed to a timestamped `.bak`, never deleted.
+exists, it is renamed to a timestamped `.bak` next to `Packages/` — never
+deleted, and never loaded by Sublime as a package (stale in-`Packages`
+backups from older runs are relocated there too).
 
 ### Manual steps (if you don't trust piped curl)
 
@@ -307,6 +309,12 @@ package); `git diff` before committing. Re-running `bootstrap.sh` handles
 this automatically: for the files the incoming commits would overwrite, it
 backs up the runtime versions to timestamped `.bak` files, restores the
 committed ones, and retries the pull.
+
+One related trap: anything left inside `Packages/` is loaded as a package.
+A backed-up `User.<timestamp>.bak` directory parked there can ship an old
+`Package Control.sublime-settings`, which Package Control merges as
+"predefined packages" and silently strips from your manifest. Backups belong
+next to `Packages/`, and `bootstrap.sh` relocates any it finds.
 
 ## LSP servers: self-managed vs. system
 
