@@ -201,9 +201,10 @@ fi
 # and Preferences) while the editor runs, which makes `git pull --ff-only`
 # refuse to fast-forward when incoming commits touch the same files. When
 # that happens, back up the locally-modified copies of exactly the files the
-# pull would overwrite, restore their committed versions, and retry once.
-# Uncommitted changes to files the pull does not touch are left alone, and a
-# clean, current checkout pulls with no changes at all.
+# pull would overwrite (tracked ones are restored from HEAD; untracked ones
+# are moved aside so the pull can write them) and retry once. Changes to
+# files the pull does not touch are left alone, and a clean, current checkout
+# pulls with no changes at all.
 sync_user_dir() {
     local upstream
     upstream="$(git -C "$USER_DIR" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" || return 1
@@ -217,20 +218,27 @@ sync_user_dir() {
     incoming="$(git -C "$USER_DIR" diff --name-only "HEAD...$upstream" | sort -u)"
     blocking="$(comm -12 <(printf '%s\n' "$modified") <(printf '%s\n' "$incoming"))"
 
-    if [ -z "$blocking" ]; then
-        git -C "$USER_DIR" pull --ff-only
-        return
+    local untracked untracked_blocking
+    untracked="$(git -C "$USER_DIR" ls-files --others --exclude-standard | sort -u)"
+    untracked_blocking="$(comm -12 <(printf '%s\n' "$untracked") <(printf '%s\n' "$incoming"))"
+
+    if [ -n "$blocking" ] || [ -n "$untracked_blocking" ]; then
+        local stamp
+        stamp="$(date +%Y%m%d-%H%M%S)"
+        local file
+        while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            log "Backing up runtime-modified $(basename "$file") to $(basename "$file").$stamp.bak"
+            cp "$USER_DIR/$file" "$USER_DIR/$file.$stamp.bak"
+            git -C "$USER_DIR" checkout HEAD -- "$file"
+        done <<< "$blocking"
+        while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            log "Backing up untracked $(basename "$file") to $(basename "$file").$stamp.bak"
+            mv "$USER_DIR/$file" "$USER_DIR/$file.$stamp.bak"
+        done <<< "$untracked_blocking"
     fi
 
-    local stamp
-    stamp="$(date +%Y%m%d-%H%M%S)"
-    local file
-    while IFS= read -r file; do
-        [ -n "$file" ] || continue
-        log "Backing up runtime-modified $(basename "$file") to $(basename "$file").$stamp.bak"
-        cp "$USER_DIR/$file" "$USER_DIR/$file.$stamp.bak"
-        git -C "$USER_DIR" checkout HEAD -- "$file"
-    done <<< "$blocking"
     git -C "$USER_DIR" pull --ff-only
 }
 
