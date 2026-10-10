@@ -1,0 +1,29 @@
+{
+    // SQL linting and formatting via SQLFluff, installed by bootstrap.sh with
+    // pipx (so it lives in ~/.local/bin, which we prepend to PATH here).
+    //
+    // SQLFluff needs to know the dialect. Add a .sqlfluff file at the project
+    // root, e.g.
+    //
+    //     [sqlfluff]
+    //     dialect = postgres
+    //
+    // or it fails with a "No dialect was specified" error on first run.
+    //
+    // Run with the standard build keys: Ctrl+B / Cmd+B to lint, or
+    // Ctrl+Shift+B / Cmd+Shift+B to pick Fix (apply auto-fixes) or Format.
+    "selector": "source.sql",
+    "shell_cmd": "PATH=\"$HOME/.local/bin:$PATH\" sqlfluff lint -n --format github-annotation-native \"$file\"",
+    "working_dir": "$file_path",
+    "file_regex": "^::\\S+ title=SQLFluff,file=(.+?),line=(\\d+),col=(\\d+)(?:,[^:]+)?::(.*)$",
+    "variants": [
+        {
+            "name": "Fix",
+            "shell_cmd": "PATH=\"$HOME/.local/bin:$PATH\" sqlfluff fix -n --force \"$file\""
+        },
+        {
+            "name": "Format",
+            "shell_cmd": "PATH=\"$HOME/.local/bin:$PATH\" sqlfluff format -n \"$file\""
+        }
+    ]
+}

@@ -2,6 +2,9 @@
 
 My Sublime Text 4 configuration, made reproducible across Linux and macOS.
 
+It is built for full-stack work — Python, React/TypeScript, SQL, Rust, C++ —
+plus in-editor data exploration with Jupyter kernels.
+
 This repo **is** Sublime's `Packages/User` directory. Clone it into place and
 Sublime picks up every setting; Package Control reads the committed manifest
 and installs every package. Installed packages themselves are never committed
@@ -26,10 +29,17 @@ curl -fsSL https://raw.githubusercontent.com/philip-goh/philips-sublime-config/m
 > `gh auth login`, a PAT, or SSH keys) and use the manual steps below.
 
 It installs Sublime Text (apt repo on Linux, Homebrew cask on macOS), Package
-Control, the system runtimes the LSP packages need, Rust via rustup, and then
-clones this repo into `Packages/User`. It is idempotent — re-running it pulls
-the latest config instead of re-installing. If a `Packages/User` directory
-already exists, it is renamed to a timestamped `.bak`, never deleted.
+Control, the system runtimes the LSP packages need, Rust via rustup, SQLFluff
+via pipx, and then clones this repo into `Packages/User`. It also prunes
+packages this repo has dropped (see "Packages removed" below), because
+Package Control installs additions but never removes anything on its own.
+
+It is idempotent — re-running it pulls the latest config instead of
+re-installing, and upgrades SQLFluff if pipx has it installed. If Package
+Control left its settings file dirty while Sublime was running, the script
+saves that runtime state to a timestamped `.bak` and retries the pull once
+(see "Runtime drift is normal"). If a `Packages/User` directory already
+exists, it is renamed to a timestamped `.bak`, never deleted.
 
 ### Manual steps (if you don't trust piped curl)
 
@@ -45,38 +55,109 @@ Or do what the script does by hand:
 1. Install Sublime Text 4 ([official instructions](https://www.sublimetext.com/docs/linux_repositories.html)
    for Linux, `brew install --cask sublime-text` on macOS).
 2. Install system runtimes: `build-essential`/Xcode CLT, `clangd`, `python3`
-   (+ pip, venv), `nodejs`/`npm`, `git`, `curl`, `shellcheck`, `shfmt`.
+   (+ pip, venv), `nodejs`/`npm`, `git`, `curl`, `shellcheck`, `shfmt`,
+   `pipx`.
 3. Install Rust via [rustup](https://rustup.rs) (not apt/brew), then
    `rustup component add rust-analyzer`.
-4. Download [Package Control](https://packagecontrol.io/Package%20Control.sublime-package)
+4. `pipx install sqlfluff` (SQL linting/formatting; pipx avoids PEP 668
+   "externally managed environment" errors).
+5. Download [Package Control](https://packagecontrol.io/Package%20Control.sublime-package)
    into Sublime's `Installed Packages/` directory.
-5. Back up any existing `Packages/User`, then clone this repo in its place.
-6. Launch Sublime Text.
+6. Back up any existing `Packages/User`, then clone this repo in its place.
+7. Launch Sublime Text.
 
 ## What's in the box
 
-Language intelligence (all via [LSP](https://lsp.sublimetext.io/)):
+Language intelligence and tooling:
 
-| Language   | Packages                                | Server binary from |
-|------------|-----------------------------------------|--------------------|
-| Python     | LSP-pyright (types), LSP-ruff (lint/format) | self-managed   |
-| Rust       | LSP-rust-analyzer, Rust Enhanced (cargo builds, syntax) | rustup component |
-| JS/TS      | LSP-typescript                          | self-managed       |
-| C/C++      | LSP-clangd                              | system clangd      |
-| Bash       | LSP-bash (uses system `shellcheck`/`shfmt`) | self-managed   |
-| YAML/k8s   | LSP-yaml (kubernetes + GitHub Actions schemas) | self-managed |
-| JSON       | LSP-json, Pretty JSON (format/minify/query) | self-managed   |
-| Docker     | LSP-dockerfile, Dockerfile Syntax Highlighting | self-managed |
-| SQL        | SqlBeautifier                           | —                  |
-| TOML       | built into Sublime Text ≥ 4200 (no package; Package Control silently skips packages that shadow shipped ones) | — |
-| CSV        | CSV (column highlighting/editing)       | —                  |
-| Markdown   | MarkdownEditing                         | —                  |
-| requirements.txt | requirementstxt                   | —                  |
+| Area       | Packages / tools                                   | Server binary from     |
+|------------|----------------------------------------------------|------------------------|
+| Python     | LSP-pyright (types), LSP-ruff (lint/format)        | self-managed           |
+| Rust       | LSP-rust-analyzer, Rust Enhanced (cargo builds)    | rustup component       |
+| JS/TS/React| LSP-typescript, LSP-eslint                         | self-managed (Node; ESLint runs from the project) |
+| C/C++      | LSP-clangd                                         | system clangd          |
+| Bash       | LSP-bash (uses system `shellcheck`/`shfmt`)        | self-managed           |
+| YAML/k8s   | LSP-yaml (kubernetes + GitHub Actions schemas)     | self-managed           |
+| JSON       | LSP-json, Pretty JSON (format/minify/query)        | self-managed           |
+| Docker     | LSP-dockerfile, Dockerfile Syntax Highlighting     | self-managed           |
+| SQL        | built-in SQL syntax + SQLFluff build system        | pipx (`sqlfluff`)      |
+| CSV/data   | rainbow_csv (column highlighting, RBQL queries)    | —                      |
+| Jupyter    | Helium (run cells, inspect DataFrames in-editor)   | your Python `ipykernel`|
+| TOML       | built into Sublime Text ≥ 4200                     | —                      |
+| Markdown   | MarkdownEditing                                    | —                      |
 
-Editor quality of life: BracketHighlighter, GitGutter, AutoFileName,
-SideBarEnhancements, A File Icon, Terminus (terminal in the editor), and
-PackageDev (syntax + completions for editing the `.sublime-settings` files
-in this very repo).
+Editor quality of life: BracketHighlighter, GitGutter, FileSystem
+Autocompletion (path completion, replacing the abandoned AutoFileName),
+SideBarEnhancements, A File Icon, Terminus (terminal in the editor),
+PackageDev (syntax + completions for the `.sublime-settings` files in this
+very repo), and OpenAI completion (configured in
+[`openAI.sublime-settings`](openAI.sublime-settings) against a local model
+server).
+
+## Working with data
+
+**CSV and tabular data** — [rainbow_csv](https://github.com/mechatroner/sublime_rainbow_csv)
+highlights columns by position and ships RBQL, which runs SQL-like queries
+against CSV using Python or JavaScript expressions:
+
+```sql
+select a1, a2 order by a3 desc limit 10
+```
+
+Use `Rainbow CSV: RBQL` from the command palette.
+
+**Jupyter kernels** — [Helium](https://github.com/kaste/Helium) executes
+`# %%` cells against a Jupyter kernel and shows results inline, which beats
+re-scanning a notebook when exploring a codebase. Register a project
+virtualenv as a kernel once:
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install ipykernel pandas   # plus your analysis stack
+.venv/bin/python -m ipykernel install --user --name myproject
+```
+
+Then run `Helium: Connect Kernel`, pick **New kernel → myproject**.
+
+**SQL** — [SQLFluff](https://sqlfluff.com) lints and formats with
+`Ctrl+B`/`Cmd+B` (lint) and `Ctrl+Shift+B`/`Cmd+Shift+B` (variants: Fix,
+Format). SQLFluff needs to know your dialect — add a `.sqlfluff` file at the
+project root:
+
+```ini
+[sqlfluff]
+dialect = postgres
+```
+
+(`sqlfluff dialects` lists ~30 options; the build system's first run without
+a config prints the list.)
+
+## Keeping this config up to speed
+
+Three layers, so nothing silently rots:
+
+1. **Package Control** upgrades installed packages automatically when Sublime
+   starts (`auto_upgrade` is on by default).
+2. **Package maintenance audit** — `python3 scripts/check_packages.py`
+   downloads Package Control's channel index and reports the newest release
+   of every package in the manifest:
+
+   ```
+   STATUS   PACKAGE                            LATEST RELEASE     AGE
+   OK       LSP-ruff                           2026-10-08          2d
+   WARN     Helium                             2024-08-05        796d
+   ```
+
+   `WARN` means older than two years (revisit eventually); `STALE` (three
+   years) or `MISSING` (typo, or delisted from Package Control) makes the
+   script exit non-zero. The
+   [`package-audit` workflow](.github/workflows/package-audit.yml) runs it
+   weekly and on demand, and a failed scheduled run notifies via GitHub, so
+   an abandoned dependency surfaces even if you never look.
+3. **`bootstrap.sh`** is idempotent: re-run it to pull the latest config,
+   upgrade SQLFluff, and prune packages this repo has dropped (Package
+   Control itself never uninstalls anything). On a clean, current machine it
+   changes nothing.
 
 ## Key bindings
 
@@ -93,9 +174,13 @@ falls back to Sublime's built-in behavior otherwise.
 | `Ctrl+.` / `Cmd+.`                  | Code actions                 |
 | `Ctrl+Alt+F` / `Cmd+Opt+F`          | Format document              |
 | `Ctrl+K Ctrl+I` / `Cmd+K Cmd+I`     | Hover docs at caret          |
+| `Ctrl+B` / `Cmd+B`                  | SQLFluff lint (SQL files)    |
+| `Ctrl+Shift+B` / `Cmd+Shift+B`      | SQLFluff Fix / Format        |
 | `Alt+`` `                           | Toggle Terminus terminal     |
 
-(`Ctrl+`` ` is left alone — that's Sublime's own console.)
+(`Ctrl+`` ` is left alone — that's Sublime's own console; `Ctrl+B` is
+Sublime's standard build key, which the SQLFluff build system claims only
+for SQL files.)
 
 ## How the package manifest sync works
 
@@ -113,8 +198,16 @@ submodules.
 3. `git diff` to confirm, then commit. Other machines pick it up on their
    next `git pull` + Sublime restart.
 
-Removing works the same way in reverse: `Package Control: Remove Package`,
-then commit the shrunken manifest.
+### Removing a package
+
+Removing works in reverse — `Package Control: Remove Package`, then commit
+the shrunken manifest — but note Package Control **never uninstalls anything
+by itself** when a name disappears from the list. To make removals propagate
+to machines that already have the package:
+
+1. Add the name to `PRUNED_PACKAGES` in `bootstrap.sh`.
+2. Re-run `bootstrap.sh` on those machines (or remove it manually via
+   `Package Control: Remove Package`).
 
 ### Runtime drift is normal
 
@@ -132,17 +225,23 @@ git pull --ff-only
 ```
 
 Only commit manifest changes you made deliberately (installing/removing a
-package); `git diff` before committing.
+package); `git diff` before committing. Re-running `bootstrap.sh` handles the
+manifest case automatically: it backs up the runtime version, restores the
+committed one, and retries the pull.
 
 ## LSP servers: self-managed vs. system
 
 Most `LSP-*` helper packages download and update their own language server —
 you install nothing:
 
-- **LSP-pyright, LSP-ruff, LSP-typescript, LSP-json, LSP-yaml, LSP-bash,
-  LSP-dockerfile** — self-managed (they use the Node runtime / their own
-  bundled tooling). LSP-bash additionally picks up the system `shellcheck`
-  and `shfmt` (installed by `bootstrap.sh`) for linting and formatting.
+- **LSP-pyright, LSP-ruff, LSP-typescript, LSP-eslint, LSP-json, LSP-yaml,
+  LSP-bash, LSP-dockerfile** — self-managed (they use the Node runtime /
+  their own bundled tooling). LSP-eslint additionally runs the ESLint from
+  your project so it uses your config and plugins. LSP-bash picks up the
+  system `shellcheck` and `shfmt` (installed by `bootstrap.sh`) for linting
+  and formatting.
+- **SQLFluff** is not an LSP package: it is an external, actively maintained
+  tool installed with `pipx` and driven by `SQLFluff.sublime-build`.
 
 Two come from the **system** and are installed by `bootstrap.sh`:
 
@@ -153,22 +252,44 @@ Two come from the **system** and are installed by `bootstrap.sh`:
 
 ## CI
 
-Every push runs [a small workflow](.github/workflows/ci.yml) that parses all
-`*.sublime-settings` / `*.sublime-keymap` / `*.sublime-project` files
-(Sublime's JSON-with-comments dialect) and shellchecks `bootstrap.sh` — a
-typo in a settings file otherwise fails silently inside Sublime. Run it
-locally with:
+Every push runs [a workflow](.github/workflows/ci.yml) that parses all
+`*.sublime-settings` / `*.sublime-keymap` / `*.sublime-project` /
+`*.sublime-build` files (Sublime's JSON-with-comments dialect), byte-compiles
+the check scripts, and shellchecks `bootstrap.sh` — a typo in a settings file
+otherwise fails silently inside Sublime. Run it locally with:
 
 ```sh
 python3 scripts/check_settings.py
+python3 scripts/check_packages.py   # needs network
 ```
 
-(The script lives in `scripts/` because Sublime loads any *top-level* `.py`
-in `Packages/User` as an editor plugin; subdirectories are ignored.)
+The second workflow, [`package-audit`](.github/workflows/package-audit.yml),
+runs the maintenance audit on a weekly schedule.
+
+(The check scripts live in `scripts/` because Sublime loads any *top-level*
+`.py` in `Packages/User` as an editor plugin; subdirectories are ignored.)
 
 ## Per-project overrides
 
 Global format-on-save is deliberately off (shared codebases). Copy
 [`project-template.sublime-project`](project-template.sublime-project) into a
 project to get a virtualenv-aware pyright, strict type checking, and
-format-on-save with Ruff code actions — scoped to that project only.
+format-on-save with Ruff code actions — scoped to that project only. SQL
+dialect and Helium kernel registration are per-project too (see "Working with
+data" above).
+
+## Packages removed from this config
+
+The maintenance audit flagged these as abandoned; they were replaced with
+actively maintained tools:
+
+| Dropped                | Last release | Replaced by                          |
+|------------------------|--------------|--------------------------------------|
+| AutoFileName           | 2014         | FileSystem Autocompletion            |
+| CSV                    | 2016         | rainbow_csv                          |
+| SqlBeautifier          | 2014         | SQLFluff build system                |
+| requirementstxt        | 2016         | — no maintained alternative; `requirements.txt` opens as plain text |
+
+Three remaining packages move slowly but are still maintained; the audit
+prints a `WARN` for them, which is the reminder to revisit: Dockerfile Syntax
+Highlighting, Helium, and Pretty JSON.

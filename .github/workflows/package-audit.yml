@@ -1,0 +1,21 @@
+name: Package audit
+
+# Package Control auto-installs the manifest but never warns when a package
+# stops being maintained. This weekly run downloads Package Control's channel
+# index and fails if a listed package has gone missing or unreleased for three
+# years. A failed scheduled run notifies the repo owner via GitHub's default
+# Actions notifications.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Audit package manifest for staleness
+        run: python3 scripts/check_packages.py

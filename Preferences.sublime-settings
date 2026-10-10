@@ -24,6 +24,11 @@
         ".venv/", "venv/",
         "__pycache__/",
         ".mypy_cache/", ".ruff_cache/", ".pytest_cache/",
-        "target/"    // cargo build output
+        ".ipynb_checkpoints/",
+        "target/",    // cargo build output
+        // Data / analysis artifacts (keep binaries out of search and indexing):
+        "*.parquet", "*.feather", "*.arrow", "*.orc",
+        "*.h5", "*.hdf5", "*.pkl", "*.npy", "*.npz",
+        "*.sqlite", "*.duckdb", "*.gz", "*.zst"
     ]
 }

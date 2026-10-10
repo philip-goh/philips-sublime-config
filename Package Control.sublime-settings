@@ -1,15 +1,16 @@
 {
     "installed_packages": [
         "A File Icon",
-        "AutoFileName",
         "BracketHighlighter",
-        "CSV",
         "Dockerfile Syntax Highlighting",
+        "FileSystem Autocompletion",
         "GitGutter",
+        "Helium",
         "LSP",
         "LSP-bash",
         "LSP-clangd",
         "LSP-dockerfile",
+        "LSP-eslint",
         "LSP-json",
         "LSP-pyright",
         "LSP-ruff",
@@ -20,10 +21,9 @@
         "OpenAI completion",
         "PackageDev",
         "Pretty JSON",
-        "requirementstxt",
+        "rainbow_csv",
         "Rust Enhanced",
         "SideBarEnhancements",
-        "SqlBeautifier",
         "Terminus"
     ]
 }

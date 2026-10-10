@@ -14,3 +14,6 @@ Terminus.hidden-color-scheme
 
 # local-ai writes timestamped backups before merging settings.
 *.bak
+
+# Bytecode from running the check scripts locally.
+__pycache__/

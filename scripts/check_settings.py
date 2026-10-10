@@ -13,7 +13,12 @@ import re
 import sys
 from pathlib import Path
 
-GLOBS = ("*.sublime-settings", "*.sublime-keymap", "*.sublime-project")
+GLOBS = (
+    "*.sublime-settings",
+    "*.sublime-keymap",
+    "*.sublime-project",
+    "*.sublime-build",
+)
 
 
 def strip_jsonc(text: str) -> str:
